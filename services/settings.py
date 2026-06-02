@@ -6,8 +6,15 @@ from database.db import async_session
 from database.models import Setting
 
 
-BRAND_NAME = "Tajway_cargo"
-LEGACY_BRAND_NAMES = ("Akbarshoy bot", "AK Cargo", "Wasit Cargo", "wasit_cargo")
+BRAND_NAME = "Akcorgo"
+LEGACY_BRAND_NAMES = (
+    "Akbarshoy bot",
+    "AK Cargo",
+    "Wasit Cargo",
+    "wasit_cargo",
+    "Tajway_cargo",
+    "Tajway Cargo",
+)
 BRAND_SYNC_SETTING_KEYS = {"cargo_name", "welcome_text_tj", "welcome_text_ru"}
 
 DEFAULT_SETTINGS = {
@@ -37,12 +44,12 @@ DEFAULT_SETTINGS = {
     "operator_work_time": "09:00–18:00",
     "welcome_image_file_id": "",
     "welcome_text_tj": (
-        "🚚 <b>Хуш омадед ба Tajway_cargo!</b>\n\n"
+        "🚚 <b>Хуш омадед ба Akcorgo!</b>\n\n"
         "Борҳои худро аз Чин то Тоҷикистон осон ва ором пайгирӣ кунед.\n"
         "Лутфан забонро интихоб кунед:"
     ),
     "welcome_text_ru": (
-        "🚚 <b>Добро пожаловать в Tajway_cargo!</b>" + chr(10) + chr(10) +
+        "🚚 <b>Добро пожаловать в Akcorgo!</b>" + chr(10) + chr(10) +
         "<blockquote>" +
         "Ваш карго-сервис из Китая в Таджикистан." + chr(10) +
         "Выберите язык, чтобы продолжить." +

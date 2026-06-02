@@ -55,7 +55,7 @@ def _delivery_received_text(language: str) -> str:
             "✅ <b>Ваш товар получен</b>\n\n"
             "<blockquote>"
             "Статус груза изменён на «Получено».\n"
-            "Спасибо, что воспользовались услугами Tajway_cargo!"
+            "Спасибо, что воспользовались услугами Akcorgo!"
             "</blockquote>"
         )
 
@@ -63,7 +63,7 @@ def _delivery_received_text(language: str) -> str:
         "✅ <b>Бори шумо супорида шуд</b>\n\n"
         "<blockquote>"
         "Статуси бор ба «Супорида шуд» иваз шуд.\n"
-        "Ташаккур, ки аз хизматрасонии Tajway_cargo истифода бурдед!"
+        "Ташаккур, ки аз хизматрасонии Akcorgo истифода бурдед!"
         "</blockquote>"
     )
 

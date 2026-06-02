@@ -144,7 +144,10 @@ def warehouse_management_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="➕ Адрес илова кардан", callback_data="admin_wh:add")],
+            [InlineKeyboardButton(text="✏️ Адресро иваз кардан", callback_data="admin_wh:edit")],
+            [InlineKeyboardButton(text="🇹🇯 Адреси гирифтани бор", callback_data="admin_wh:tj_pickup")],
             [InlineKeyboardButton(text="📋 Рӯйхати адресҳо", callback_data="admin_wh:list")],
+            [InlineKeyboardButton(text="⏸ Ғайрифаъол кардан", callback_data="admin_wh:inactive")],
             [InlineKeyboardButton(text="⬅️ Бозгашт", callback_data="settings:main")],
         ]
     )

@@ -1,5 +1,5 @@
 CHOOSE_LANGUAGE = (
-    "🚚 <b>Добро пожаловать в Tajway_cargo!</b>\n\n"
+    "🚚 <b>Добро пожаловать в Akcorgo!</b>\n\n"
     "Отслеживайте свои грузы из Китая в Таджикистан.\n\n"
     "<blockquote>Пожалуйста, выберите язык:</blockquote>"
 )
@@ -26,7 +26,7 @@ ASK_CITY = (
 
 REGISTRATION_COMPLETED = (
     "✅ <b>Регистрация завершена!</b>\n\n"
-    "🎉 Вы стали клиентом Tajway_cargo.\n"
+    "🎉 Вы стали клиентом Akcorgo.\n"
     "🔐 Ваш клиентский код: <code>{client_code}</code>\n\n"
     "<blockquote>Этот код используется для отслеживания груза и идентификации клиента.</blockquote>"
 )

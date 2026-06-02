@@ -389,8 +389,8 @@ async def register_phone_command(message: Message, state: FSMContext) -> None:
 
     if command == "/start":
         await state.clear()
-        from handlers.start import start_handler
-        await start_handler(message, state)
+        from handlers.start import start_command
+        await start_command(message, state)
         return
 
     if command == "/admin":

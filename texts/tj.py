@@ -1,5 +1,5 @@
 CHOOSE_LANGUAGE = (
-    "🚚 <b>Хуш омадед ба Tajway_cargo!</b>\n\n"
+    "🚚 <b>Хуш омадед ба Akcorgo!</b>\n\n"
     "Борҳои худро аз Чин то Тоҷикистон осон ва ором пайгирӣ кунед.\n\n"
     "<blockquote>Лутфан забонро интихоб кунед:</blockquote>"
 )
@@ -26,7 +26,7 @@ ASK_CITY = (
 
 REGISTRATION_COMPLETED = (
     "✅ <b>Сабти ном анҷом шуд!</b>\n\n"
-    "🎉 Шумо ба Tajway_cargo пайваст шудед.\n"
+    "🎉 Шумо ба Akcorgo пайваст шудед.\n"
     "🔐 Коди мизоҷии шумо: <code>{client_code}</code>\n\n"
     "<blockquote>Ин код барои пайгирии бор ва шинохтани мизоҷ истифода мешавад.</blockquote>"
 )

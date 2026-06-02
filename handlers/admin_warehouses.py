@@ -170,7 +170,10 @@ async def list_admin_warehouses(callback: CallbackQuery) -> None:
 
 @router.callback_query(
     AdminWarehouseStates.choosing_city,
-    F.data.startswith("admin_wh:city:"),
+    (
+        F.data.startswith("admin_wh:city:add:")
+        | F.data.startswith("admin_wh:city:edit:")
+    ),
 )
 async def choose_warehouse_city(callback: CallbackQuery, state: FSMContext) -> None:
     if not _is_admin_callback(callback):
@@ -508,15 +511,21 @@ async def cancel_warehouse_flow(callback: CallbackQuery, state: FSMContext) -> N
 
 @router.callback_query(F.data == "admin_wh:tj_pickup")
 async def start_tj_pickup_warehouse(callback: CallbackQuery, state: FSMContext) -> None:
+    if not _is_admin_callback(callback):
+        await callback.answer()
+        return
+
     await state.clear()
     await state.update_data(address_kind="tj_pickup")
     await state.set_state(AdminWarehouseStates.choosing_city)
 
-    await callback.message.answer(
-        "🇹🇯 <b>Адреси гирифтани бор</b>\n\n"
-        "<blockquote>Филиалро интихоб кунед. Ин адрес вақте ба user нишон дода мешавад, ки бораш ба Тоҷикистон расида бошад.</blockquote>",
-        reply_markup=admin_warehouse_city_keyboard("tj_pickup"),
-    )
+    if callback.message is not None:
+        await callback.message.answer(
+            "🇹🇯 <b>Адреси гирифтани бор</b>\n\n"
+            "<blockquote>Филиалро интихоб кунед. Ин адрес вақте ба user нишон дода мешавад, ки бораш ба Тоҷикистон расида бошад.</blockquote>",
+            reply_markup=admin_warehouse_city_keyboard("tj_pickup"),
+        )
+    await callback.answer()
 
 
 @router.callback_query(
@@ -524,18 +533,27 @@ async def start_tj_pickup_warehouse(callback: CallbackQuery, state: FSMContext) 
     F.data.startswith("admin_wh:city:tj_pickup:")
 )
 async def choose_tj_pickup_city(callback: CallbackQuery, state: FSMContext) -> None:
+    if not _is_admin_callback(callback):
+        await callback.answer()
+        return
+
     city_key = callback.data.split(":")[-1]
+    if city_key not in CITY_NAMES:
+        await callback.answer()
+        return
 
     await state.update_data(city_key=city_key, address_kind="tj_pickup")
     await state.set_state(AdminWarehouseStates.waiting_for_photo_caption)
 
-    await callback.message.answer(
-        "🇹🇯 <b>Адреси гирифтани бор</b>\n\n"
-        "<blockquote>"
-        "Фото + caption, видео + caption ё матни одӣ фиристед.\n\n"
-        "Ин адрес вақте нишон дода мешавад, ки user <b>Аз склад гирифтан</b>-ро пахш кунад."
-        "</blockquote>"
-    )
+    if callback.message is not None:
+        await callback.message.answer(
+            "🇹🇯 <b>Адреси гирифтани бор</b>\n\n"
+            "<blockquote>"
+            "Фото + caption, видео + caption ё матни одӣ фиристед.\n\n"
+            "Ин адрес вақте нишон дода мешавад, ки user <b>Аз склад гирифтан</b>-ро пахш кунад."
+            "</blockquote>"
+        )
+    await callback.answer()
 
 
 @router.callback_query(
@@ -543,6 +561,10 @@ async def choose_tj_pickup_city(callback: CallbackQuery, state: FSMContext) -> N
     F.data == "admin_wh:save_tj_pickup"
 )
 async def save_tj_pickup(callback: CallbackQuery, state: FSMContext) -> None:
+    if not _is_admin_callback(callback):
+        await callback.answer()
+        return
+
     data = await state.get_data()
 
     warehouse = await save_tj_pickup_warehouse(

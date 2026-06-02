@@ -235,7 +235,7 @@ async def set_single_status(callback: CallbackQuery) -> None:
                 "✅ <b>Ваш груз получен</b>\n\n"
                 "<blockquote>"
                 "Вы получили товар со склада.\n"
-                "🤝 Спасибо за доверие к Tajway_cargo!"
+                "🤝 Спасибо за доверие к Akcorgo!"
                 "</blockquote>"
             )
         else:
@@ -243,7 +243,7 @@ async def set_single_status(callback: CallbackQuery) -> None:
                 "✅ <b>Бори шумо супорида шуд</b>\n\n"
                 "<blockquote>"
                 "Шумо товарро аз склад қабул кардед.\n"
-                "🤝 Ташаккур барои боварӣ ба Tajway_cargo!"
+                "🤝 Ташаккур барои боварӣ ба Akcorgo!"
                 "</blockquote>"
             )
 
@@ -282,6 +282,9 @@ async def set_single_status(callback: CallbackQuery) -> None:
 
 
 async def _admin_send_parcels_by_status(message, status_code: str, title: str):
+    if not _is_admin_message(message):
+        return
+
     from sqlalchemy import select
     from database.db import async_session
     from database.models import Parcel, User

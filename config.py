@@ -31,6 +31,8 @@ BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 DATABASE_URL = os.getenv("DATABASE_URL", "")
 ADMIN_IDS = _get_int_list(os.getenv("ADMIN_IDS"))
 CLIENT_CODE_PREFIX = os.getenv("CLIENT_CODE_PREFIX", "AK")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+OPENAI_VISION_MODEL = os.getenv("OPENAI_VISION_MODEL", "gpt-5.4-mini")
 
 DEFAULT_KG_PRICE_TJS = _get_float("DEFAULT_KG_PRICE_TJS", 0.0)
 DEFAULT_CUBE_PRICE_TJS = _get_float("DEFAULT_CUBE_PRICE_TJS", 0.0)

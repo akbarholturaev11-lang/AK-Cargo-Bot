@@ -29,7 +29,7 @@ async def _send_welcome_screen(message: Message) -> None:
     values = await get_many_settings(WELCOME_SETTING_KEYS)
     image_file_id = values["welcome_image_file_id"].strip()
     welcome_text = (
-    "🚚 <b>Добро пожаловать в Tajway Cargo!</b>\n\n"
+    "🚚 <b>Добро пожаловать в Akcorgo!</b>\n\n"
     "<blockquote>"
     "Ваш карго-сервис из Китая в Таджикистан.\n"
     "Выберите язык, чтобы продолжить."
