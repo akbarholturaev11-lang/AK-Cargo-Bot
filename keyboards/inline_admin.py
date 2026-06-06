@@ -24,25 +24,6 @@ def admin_confirm_keyboard() -> InlineKeyboardMarkup:
     )
 
 
-def admin_quick_panel_keyboard() -> InlineKeyboardMarkup:
-    return build_inline_keyboard(
-        (
-            (
-                ("📸 Бо AI илова", "admin_add_parcel:ai"),
-                ("✍️ Дастӣ илова", "admin_add_parcel:manual"),
-            ),
-            (
-                ("🔍 Ҷустуҷӯ", "admin_search:again"),
-                ("📦 Рӯйхати статусҳо", "admin_status:lists"),
-            ),
-            (
-                ("🚚 Доставка", "admin_delivery:filter:all"),
-                ("⚙️ Танзимот", "settings:main"),
-            ),
-        ),
-    )
-
-
 def parcel_statuses_keyboard() -> InlineKeyboardMarkup:
     return build_inline_keyboard(
         (
