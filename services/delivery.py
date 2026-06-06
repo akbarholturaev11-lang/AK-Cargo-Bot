@@ -1,6 +1,6 @@
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
-from sqlalchemy import select
+from sqlalchemy import case, select
 from sqlalchemy.orm import selectinload
 
 from config import ADMIN_IDS
@@ -20,6 +20,13 @@ from utils.constants import (
     DELIVERY_STATUS_ON_DELIVERY,
     DELIVERY_STATUSES,
     STATUS_ARRIVED_DESTINATION,
+)
+
+
+ACTIVE_DELIVERY_STATUSES = (
+    DELIVERY_STATUS_NEW,
+    DELIVERY_STATUS_ACCEPTED,
+    DELIVERY_STATUS_ON_DELIVERY,
 )
 
 
@@ -110,7 +117,11 @@ async def create_delivery_request(
     return request
 
 
-async def get_delivery_requests() -> list[DeliveryRequest]:
+async def get_active_delivery_request_for_parcel(
+    *,
+    user_id: int,
+    parcel_id: int,
+) -> DeliveryRequest | None:
     async with async_session() as session:
         result = await session.execute(
             select(DeliveryRequest)
@@ -118,8 +129,41 @@ async def get_delivery_requests() -> list[DeliveryRequest]:
                 selectinload(DeliveryRequest.user),
                 selectinload(DeliveryRequest.parcel),
             )
+            .where(
+                DeliveryRequest.user_id == user_id,
+                DeliveryRequest.parcel_id == parcel_id,
+                DeliveryRequest.status.in_(ACTIVE_DELIVERY_STATUSES),
+            )
             .order_by(DeliveryRequest.created_at.desc(), DeliveryRequest.id.desc())
-            .limit(30),
+            .limit(1),
+        )
+        return result.scalar_one_or_none()
+
+
+async def get_delivery_requests(
+    status: str | None = None,
+    *,
+    limit: int = 30,
+) -> list[DeliveryRequest]:
+    async with async_session() as session:
+        statement = (
+            select(DeliveryRequest)
+            .options(
+                selectinload(DeliveryRequest.user),
+                selectinload(DeliveryRequest.parcel),
+            )
+            .order_by(
+                case((DeliveryRequest.status == DELIVERY_STATUS_NEW, 0), else_=1),
+                DeliveryRequest.created_at.desc(),
+                DeliveryRequest.id.desc(),
+            )
+            .limit(limit)
+        )
+        if status is not None:
+            statement = statement.where(DeliveryRequest.status == status)
+
+        result = await session.execute(
+            statement,
         )
         return list(result.scalars().all())
 

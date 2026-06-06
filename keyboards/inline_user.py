@@ -1,4 +1,4 @@
-from aiogram.types import InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from keyboards.builders import build_inline_keyboard
 from utils.constants import (
@@ -153,7 +153,87 @@ def delivery_keyboard(lang: str, parcel_id: int | None = None) -> InlineKeyboard
     return build_inline_keyboard(rows)
 
 
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+def user_parcel_actions_keyboard(
+    lang: str,
+    parcel_id: int | None,
+    *,
+    include_delivery_actions: bool = True,
+) -> InlineKeyboardMarkup:
+    if lang == LANG_RU:
+        rows = [
+            [("🔍 Искать снова", "parcel_search:again")],
+            [("📦 Мои грузы", "user_parcel:page:0")],
+        ]
+        if include_delivery_actions and parcel_id is not None:
+            rows.extend(
+                [
+                    [("🚚 Доставка", f"delivery:request:{parcel_id}")],
+                    [("📍 Адрес получения", f"warehouse:arrival:{parcel_id}")],
+                ],
+            )
+        rows.append([("☎️ Оператор", "operator:show")])
+    else:
+        rows = [
+            [("🔍 Боз ҷустуҷӯ", "parcel_search:again")],
+            [("📦 Борҳои ман", "user_parcel:page:0")],
+        ]
+        if include_delivery_actions and parcel_id is not None:
+            rows.extend(
+                [
+                    [("🚚 Доставка", f"delivery:request:{parcel_id}")],
+                    [("📍 Адреси гирифтани бор", f"warehouse:arrival:{parcel_id}")],
+                ],
+            )
+        rows.append([("☎️ Оператор", "operator:show")])
+
+    return build_inline_keyboard(tuple(tuple(row) for row in rows))
+
+
+def parcel_not_found_keyboard(lang: str) -> InlineKeyboardMarkup:
+    if lang == LANG_RU:
+        rows = (
+            (("🔍 Искать снова", "parcel_search:again"),),
+            (("☎️ Оператор", "operator:show"),),
+        )
+    else:
+        rows = (
+            (("🔍 Боз ҷустуҷӯ", "parcel_search:again"),),
+            (("☎️ Оператор", "operator:show"),),
+        )
+    return build_inline_keyboard(rows)
+
+
+def user_parcels_page_keyboard(
+    parcels,
+    lang: str,
+    *,
+    page: int,
+    page_size: int,
+    total: int | None = None,
+) -> InlineKeyboardMarkup:
+    rows = []
+    start = page * page_size
+
+    for index, parcel in enumerate(parcels, start=start + 1):
+        label = f"{index}. {parcel.track_code}"
+        rows.append(((label, f"user_parcel:view:{parcel.id}"),))
+
+    nav = []
+    if page > 0:
+        nav.append(("⬅️", f"user_parcel:page:{page - 1}"))
+    if total is None:
+        has_next = len(parcels) == page_size
+    else:
+        has_next = (page + 1) * page_size < total
+    if has_next:
+        nav.append(("➡️", f"user_parcel:page:{page + 1}"))
+    if nav:
+        rows.append(tuple(nav))
+
+    operator_label = "☎️ Оператор" if lang == LANG_RU else "☎️ Оператор"
+    rows.append(((operator_label, "operator:show"),))
+    return build_inline_keyboard(tuple(rows))
+
 
 def channel_join_keyboard(channel_username: str) -> InlineKeyboardMarkup:
     url = f"https://t.me/{channel_username.replace('@', '')}"

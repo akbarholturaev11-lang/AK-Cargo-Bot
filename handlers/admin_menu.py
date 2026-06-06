@@ -2,6 +2,7 @@ from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
 
+from keyboards.inline_admin import admin_quick_panel_keyboard
 from keyboards.reply import admin_main_menu
 from utils.validators import is_admin
 
@@ -20,3 +21,4 @@ async def admin_command(message: Message) -> None:
         return
 
     await message.answer(ADMIN_PANEL, reply_markup=admin_main_menu())
+    await message.answer("Quick panel", reply_markup=admin_quick_panel_keyboard())

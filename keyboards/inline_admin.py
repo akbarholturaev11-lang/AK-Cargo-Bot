@@ -24,6 +24,25 @@ def admin_confirm_keyboard() -> InlineKeyboardMarkup:
     )
 
 
+def admin_quick_panel_keyboard() -> InlineKeyboardMarkup:
+    return build_inline_keyboard(
+        (
+            (
+                ("📸 AI add", "admin_add_parcel:ai"),
+                ("✍️ Manual add", "admin_add_parcel:manual"),
+            ),
+            (
+                ("🔍 Search", "admin_search:again"),
+                ("📦 Status lists", "admin_status:lists"),
+            ),
+            (
+                ("🚚 Delivery", "admin_delivery:filter:all"),
+                ("⚙️ Settings", "settings:main"),
+            ),
+        ),
+    )
+
+
 def parcel_statuses_keyboard() -> InlineKeyboardMarkup:
     return build_inline_keyboard(
         (

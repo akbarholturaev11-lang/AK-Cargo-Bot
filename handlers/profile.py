@@ -6,11 +6,10 @@ from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
 
 from handlers.user_menu import PROFILE_MENU_LABELS, get_current_user
 from keyboards.inline_user import (
-    profile_city_keyboard,
     profile_edit_keyboard,
     profile_language_keyboard,
 )
-from keyboards.reply import phone_contact_keyboard, user_main_menu
+from keyboards.reply import auth_back_keyboard, auth_phone_keyboard, user_main_menu
 from services.warehouses import get_active_tj_pickup_warehouses
 from services.users import (
     city_display_name,
@@ -27,6 +26,7 @@ from utils.constants import CITY_NAMES, LANG_RU, LANG_TJ, LANGUAGE_CODES
 
 
 router = Router(name="profile")
+BACK_LABELS = {tj.BACK, ru.BACK, "Бозгашт", "Назад"}
 
 
 class ProfileStates(StatesGroup):
@@ -48,6 +48,10 @@ def _language_name(lang: str) -> str:
     if lang == LANG_RU:
         return "Русский"
     return "Тоҷикӣ"
+
+
+def _cancelled_text(lang: str) -> str:
+    return "Бекор карда шуд." if lang == LANG_TJ else "Отменено."
 
 
 def _format_profile(user) -> str:
@@ -177,8 +181,25 @@ async def edit_name_start(callback: CallbackQuery, state: FSMContext) -> None:
     texts = _texts(user.language)
     await state.set_state(ProfileStates.edit_name)
     await state.update_data(profile_message_id=callback.message.message_id)
-    await callback.message.edit_text(texts.ASK_FULL_NAME)
+    await callback.message.edit_reply_markup(reply_markup=None)
+    await callback.message.answer(
+        texts.ASK_FULL_NAME,
+        reply_markup=auth_back_keyboard(user.language),
+    )
     await callback.answer()
+
+
+@router.message(ProfileStates.edit_name, F.text.in_(BACK_LABELS))
+@router.message(ProfileStates.edit_phone, F.text.in_(BACK_LABELS))
+async def profile_edit_back(message: Message, state: FSMContext) -> None:
+    user = await get_current_user(message)
+    if user is None:
+        await state.clear()
+        await message.answer(tj.CHOOSE_LANGUAGE)
+        return
+
+    await message.answer(_cancelled_text(user.language), reply_markup=ReplyKeyboardRemove())
+    await _edit_profile_message(message, state, user)
 
 
 @router.message(ProfileStates.edit_name, F.text)
@@ -210,10 +231,10 @@ async def edit_phone_start(callback: CallbackQuery, state: FSMContext) -> None:
     texts = _texts(user.language)
     await state.set_state(ProfileStates.edit_phone)
     await state.update_data(profile_message_id=callback.message.message_id)
-    await callback.message.edit_text(texts.ASK_PHONE)
+    await callback.message.edit_reply_markup(reply_markup=None)
     await callback.message.answer(
         texts.ASK_PHONE,
-        reply_markup=phone_contact_keyboard(user.language),
+        reply_markup=auth_phone_keyboard(user.language),
     )
     await callback.answer()
 
@@ -230,7 +251,7 @@ async def edit_phone_contact_finish(message: Message, state: FSMContext) -> None
     if not _is_own_contact(message):
         await message.answer(
             texts.INVALID_PHONE,
-            reply_markup=phone_contact_keyboard(user.language),
+            reply_markup=auth_phone_keyboard(user.language),
         )
         return
 
@@ -238,7 +259,7 @@ async def edit_phone_contact_finish(message: Message, state: FSMContext) -> None
     if phone is None:
         await message.answer(
             texts.INVALID_PHONE,
-            reply_markup=phone_contact_keyboard(user.language),
+            reply_markup=auth_phone_keyboard(user.language),
         )
         return
 
@@ -264,7 +285,7 @@ async def edit_phone_manual_finish(message: Message, state: FSMContext) -> None:
     if phone is None:
         await message.answer(
             texts.INVALID_PHONE,
-            reply_markup=phone_contact_keyboard(user.language),
+            reply_markup=auth_phone_keyboard(user.language),
         )
         return
 
@@ -283,7 +304,7 @@ async def edit_phone_invalid(message: Message, state: FSMContext) -> None:
     lang = user.language if user is not None else LANG_TJ
     await message.answer(
         _texts(lang).INVALID_PHONE,
-        reply_markup=phone_contact_keyboard(lang),
+        reply_markup=auth_phone_keyboard(lang),
     )
 
 

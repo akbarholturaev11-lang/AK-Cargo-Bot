@@ -1,23 +1,22 @@
 from datetime import date, datetime
-import logging
 
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import Message
+from aiogram.types import CallbackQuery, Message
 
 from handlers.user_menu import get_current_user
+from keyboards.inline_user import parcel_not_found_keyboard, user_parcel_actions_keyboard
 from services.normalizer import normalize_track_code
 from services.parcels import get_parcel_by_normalized_track_code
 from services.status_media import get_status_image_file_id
 from services.settings import get_setting
+from services.users import get_user_by_telegram_id
 from texts import ru, tj
 from texts.status import format_status
-from utils.constants import LANG_RU, LANG_TJ
+from utils.constants import LANG_RU, LANG_TJ, STATUS_ARRIVED_DESTINATION
 from utils.validators import is_admin
 
-
-logger = logging.getLogger(__name__)
 
 router = Router(name="parcel_search")
 
@@ -72,25 +71,30 @@ async def _format_parcel_found(parcel, lang: str) -> str:
     )
 
 
-async def _send_status_message(message: Message, parcel, text: str) -> None:
-    logger.warning(
-        "[PARCEL_SEARCH_MEDIA] track=%s status_code=%s",
-        getattr(parcel, "track_code", None),
-        getattr(parcel, "status_code", None),
-    )
-
+async def _send_status_message(
+    message: Message,
+    parcel,
+    text: str,
+    *,
+    lang: str,
+    include_delivery_actions: bool,
+) -> None:
     image_file_id = await get_status_image_file_id(parcel.status_code)
-
-    logger.warning(
-        "[PARCEL_SEARCH_MEDIA] image_exists=%s",
-        bool(image_file_id),
+    keyboard = user_parcel_actions_keyboard(
+        lang,
+        parcel.id,
+        include_delivery_actions=include_delivery_actions,
     )
 
     if image_file_id:
-        await message.answer_photo(photo=image_file_id, caption=text)
+        await message.answer_photo(
+            photo=image_file_id,
+            caption=text,
+            reply_markup=keyboard,
+        )
         return
 
-    await message.answer(text)
+    await message.answer(text, reply_markup=keyboard)
 
 
 @router.message(_is_user_search_button)
@@ -102,6 +106,18 @@ async def start_parcel_search(message: Message, state: FSMContext) -> None:
 
     await state.set_state(ParcelSearchStates.waiting_for_track_code)
     await message.answer(_texts(user.language).ASK_TRACK_CODE)
+
+
+@router.callback_query(F.data == "parcel_search:again")
+async def retry_parcel_search(callback: CallbackQuery, state: FSMContext) -> None:
+    user = await get_user_by_telegram_id(callback.from_user.id)
+    if user is None or callback.message is None:
+        await callback.answer()
+        return
+
+    await state.set_state(ParcelSearchStates.waiting_for_track_code)
+    await callback.message.answer(_texts(user.language).ASK_TRACK_CODE)
+    await callback.answer()
 
 
 @router.message(ParcelSearchStates.waiting_for_track_code, F.text)
@@ -118,13 +134,21 @@ async def search_parcel(message: Message, state: FSMContext) -> None:
     await state.clear()
 
     if parcel is None:
-        await message.answer(texts.PARCEL_NOT_FOUND)
+        await message.answer(
+            texts.PARCEL_NOT_FOUND,
+            reply_markup=parcel_not_found_keyboard(user.language),
+        )
         return
 
     await _send_status_message(
         message,
         parcel,
         await _format_parcel_found(parcel, user.language),
+        lang=user.language,
+        include_delivery_actions=(
+            parcel.user_id == user.id
+            and parcel.status_code == STATUS_ARRIVED_DESTINATION
+        ),
     )
 
 

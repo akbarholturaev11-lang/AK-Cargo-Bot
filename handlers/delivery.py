@@ -7,6 +7,7 @@ from aiogram.types import CallbackQuery, Message
 from keyboards.builders import build_inline_keyboard
 from services.delivery import (
     create_delivery_request,
+    get_active_delivery_request_for_parcel,
     get_arrived_parcel_for_user_by_id,
     get_arrived_parcel_for_user_by_track_code,
     get_latest_arrived_parcel_for_user,
@@ -77,6 +78,31 @@ def _format_confirmation(data: dict, lang: str) -> str:
     )
 
 
+def _active_delivery_text(request, lang: str) -> str:
+    status_labels = {
+        "new": "дар интизорӣ",
+        "accepted": "қабул шуд",
+        "on_delivery": "дар роҳ",
+    }
+    if lang == LANG_RU:
+        status_labels = {
+            "new": "ожидает обработки",
+            "accepted": "принята",
+            "on_delivery": "в пути",
+        }
+        return (
+            "🚚 <b>Заявка на доставку уже есть.</b>\n\n"
+            f"Трек-код: <code>{request.track_code}</code>\n"
+            f"Статус заявки: <b>{status_labels.get(request.status, request.status)}</b>"
+        )
+
+    return (
+        "🚚 <b>Дархости доставка аллакай вуҷуд дорад.</b>\n\n"
+        f"Трек-код: <code>{request.track_code}</code>\n"
+        f"Ҳолати дархост: <b>{status_labels.get(request.status, request.status)}</b>"
+    )
+
+
 def _parcel_id_from_delivery_callback(data: str | None) -> int | None:
     if not data:
         return None
@@ -125,6 +151,18 @@ async def start_delivery_request(callback: CallbackQuery, state: FSMContext) -> 
     if parcel is None:
         if callback.message is not None:
             await callback.message.answer(texts.DELIVERY_NOT_FOUND)
+        await callback.answer()
+        return
+
+    active_request = await get_active_delivery_request_for_parcel(
+        user_id=user.id,
+        parcel_id=parcel.id,
+    )
+    if active_request is not None:
+        if callback.message is not None:
+            await callback.message.answer(
+                _active_delivery_text(active_request, user.language),
+            )
         await callback.answer()
         return
 
@@ -225,6 +263,19 @@ async def confirm_delivery(callback: CallbackQuery, state: FSMContext) -> None:
         await state.clear()
         if callback.message is not None:
             await callback.message.edit_text(_texts(user.language).DELIVERY_NOT_FOUND)
+        await callback.answer()
+        return
+
+    active_request = await get_active_delivery_request_for_parcel(
+        user_id=user.id,
+        parcel_id=parcel.id,
+    )
+    if active_request is not None:
+        await state.clear()
+        if callback.message is not None:
+            await callback.message.edit_text(
+                _active_delivery_text(active_request, user.language),
+            )
         await callback.answer()
         return
 

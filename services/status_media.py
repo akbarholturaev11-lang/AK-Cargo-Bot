@@ -1,6 +1,4 @@
-import logging
 from services.settings import get_many_settings
-logger = logging.getLogger(__name__)
 
 from utils.constants import (
     STATUS_CHINA_RECEIVED,
@@ -73,14 +71,10 @@ async def get_status_image_file_id(status_code: str | None) -> str:
 
     values = await get_many_settings(defaults)
 
-    logger.warning("[STATUS_MEDIA] raw=%s normalized=%s key=%s", status_code, normalized_status, key)
-
     if key:
         specific = (values.get(key) or "").strip()
-        logger.warning("[STATUS_MEDIA] specific_exists=%s", bool(specific))
         if specific:
             return specific
 
     fallback = (values.get("status_image_file_id") or "").strip()
-    logger.warning("[STATUS_MEDIA] fallback_exists=%s", bool(fallback))
     return fallback

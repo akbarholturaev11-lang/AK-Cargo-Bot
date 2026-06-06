@@ -18,7 +18,9 @@ from services.settings import get_setting
 from services.status_media import get_status_image_file_id
 from utils.constants import (
     DELIVERY_STATUSES,
+    DELIVERY_STATUS_ACCEPTED,
     DELIVERY_STATUS_DELIVERED,
+    DELIVERY_STATUS_NEW,
     DELIVERY_STATUS_ON_DELIVERY,
     STATUS_RECEIVED,
 )
@@ -68,8 +70,23 @@ def _delivery_received_text(language: str) -> str:
     )
 
 
-def _requests_keyboard(requests):
-    rows = tuple(
+def _delivery_filter_keyboard(status: str | None = None):
+    filter_rows = [
+        (
+            ("Ҳама", "admin_delivery:filter:all"),
+            ("Нав", f"admin_delivery:filter:{DELIVERY_STATUS_NEW}"),
+        ),
+        (
+            ("Қабул", f"admin_delivery:filter:{DELIVERY_STATUS_ACCEPTED}"),
+            ("Дар роҳ", f"admin_delivery:filter:{DELIVERY_STATUS_ON_DELIVERY}"),
+        ),
+    ]
+    return filter_rows
+
+
+def _requests_keyboard(requests, status: str | None = None):
+    rows = _delivery_filter_keyboard(status)
+    rows.extend(
         (
             (
                 f"ID {request.id} · {request.track_code}",
@@ -78,7 +95,16 @@ def _requests_keyboard(requests):
         )
         for request in requests
     )
-    return build_inline_keyboard(rows)
+    return build_inline_keyboard(tuple(rows))
+
+
+def _filter_status_from_callback(data: str | None) -> str | None:
+    status = (data or "").rsplit(":", 1)[-1]
+    if status == "all":
+        return None
+    if status in DELIVERY_STATUSES:
+        return status
+    return None
 
 
 @router.message(F.text.in_({ADMIN_DELIVERY_LABEL, "Доставка"}))
@@ -88,13 +114,38 @@ async def show_delivery_requests(message: Message) -> None:
 
     requests = await get_delivery_requests()
     if not requests:
-        await message.answer("Дархости доставка нест.")
+        await message.answer(
+            "Дархости доставка нест.",
+            reply_markup=_requests_keyboard(()),
+        )
         return
 
     await message.answer(
         "Дархостҳои доставка:",
         reply_markup=_requests_keyboard(requests),
     )
+
+
+@router.callback_query(F.data.startswith("admin_delivery:filter:"))
+async def filter_delivery_requests(callback: CallbackQuery) -> None:
+    if not _is_admin_callback(callback):
+        await callback.answer()
+        return
+
+    status = _filter_status_from_callback(callback.data)
+    requests = await get_delivery_requests(status)
+    text = "Дархостҳои доставка:"
+    if status is not None:
+        text += f"\nФилтр: {status}"
+    if not requests:
+        text += "\n\nДар ин филтр дархост нест."
+
+    if callback.message is not None:
+        await callback.message.edit_text(
+            text,
+            reply_markup=_requests_keyboard(requests, status),
+        )
+    await callback.answer()
 
 
 @router.callback_query(F.data.startswith("admin_delivery:view:"))

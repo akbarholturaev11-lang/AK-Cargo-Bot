@@ -1,8 +1,9 @@
 from aiogram import F, Router
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
+from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from handlers.user_menu import get_current_user
 from services.settings import DEFAULT_SETTINGS, get_many_settings
+from services.users import get_user_by_telegram_id
 from texts import ru, tj
 from utils.constants import LANG_RU, LANG_TJ
 
@@ -39,6 +40,21 @@ async def show_operator(message: Message) -> None:
         await message.answer(tj.CHOOSE_LANGUAGE)
         return
 
+    await _send_operator(message, user)
+
+
+@router.callback_query(F.data == "operator:show")
+async def show_operator_callback(callback: CallbackQuery) -> None:
+    user = await get_user_by_telegram_id(callback.from_user.id)
+    if user is None or callback.message is None:
+        await callback.answer()
+        return
+
+    await _send_operator(callback.message, user)
+    await callback.answer()
+
+
+async def _send_operator(message: Message, user) -> None:
     texts = _texts(user.language)
 
     values = await get_many_settings(

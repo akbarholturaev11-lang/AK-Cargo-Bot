@@ -87,6 +87,32 @@ async def _finish_preview(callback: CallbackQuery, text: str) -> None:
     await callback.message.answer(text, reply_markup=None)
 
 
+async def _prompt_tj_pickup_after_china_address(
+    callback: CallbackQuery,
+    state: FSMContext,
+    warehouse,
+) -> None:
+    await state.update_data(
+        address_kind="tj_pickup",
+        city_key=warehouse.city_key,
+        media_type="text",
+        media_file_id=None,
+        address_caption="",
+    )
+    await state.set_state(AdminWarehouseStates.waiting_for_photo_caption)
+
+    if callback.message is not None:
+        await callback.message.answer(
+            "✅ <b>Адреси склади Чин сабт шуд.</b>\n\n"
+            f"<blockquote>Филиал: {warehouse.city_name_tj}</blockquote>\n\n"
+            "🇹🇯 <b>Акнун адреси гирифтани бор дар Тоҷикистонро илова кунед.</b>\n\n"
+            "<blockquote>"
+            "Фото + caption, видео + caption ё матни одӣ фиристед.\n"
+            "Ин адрес вақте нишон дода мешавад, ки user <b>Аз склад гирифтан</b>-ро пахш кунад."
+            "</blockquote>"
+        )
+
+
 @router.callback_query(F.data == "settings:warehouses")
 async def show_warehouse_settings(callback: CallbackQuery) -> None:
     if not _is_admin_callback(callback):
@@ -300,78 +326,7 @@ async def save_warehouse(callback: CallbackQuery, state: FSMContext) -> None:
     )
 
     if not has_tj_pickup:
-        await state.update_data(
-            address_kind="tj_pickup",
-            city_key=warehouse.city_key,
-            media_type="text",
-            media_file_id=None,
-            address_caption="",
-        )
-        await state.set_state(AdminWarehouseStates.waiting_for_photo_caption)
-
-        await callback.message.answer(
-            "✅ <b>Адреси склади Чин сабт шуд.</b>\n\n"
-            f"<blockquote>Филиал: {warehouse.city_name_tj}</blockquote>\n\n"
-            "🇹🇯 <b>Акнун адреси гирифтани бор дар Тоҷикистонро илова кунед.</b>\n\n"
-            "<blockquote>"
-            "Фото + caption, видео + caption ё матни одӣ фиристед.\n"
-            "Ин адрес вақте нишон дода мешавад, ки user <b>Аз склад гирифтан</b>-ро пахш кунад."
-            "</blockquote>"
-        )
-        await callback.answer()
-        return
-
-    has_tj_pickup = bool(
-        (getattr(warehouse, "tj_pickup_caption", None) or "").strip()
-        or (getattr(warehouse, "tj_pickup_media_file_id", None) or "").strip()
-    )
-
-    if not has_tj_pickup:
-        await state.update_data(
-            address_kind="tj_pickup",
-            city_key=warehouse.city_key,
-            media_type="text",
-            media_file_id=None,
-            address_caption="",
-        )
-        await state.set_state(AdminWarehouseStates.waiting_for_photo_caption)
-
-        await _finish_preview(
-            callback,
-            (
-                "✅ Адреси склади Чин сабт шуд.\n"
-                f"Филиал: {warehouse.city_name_tj}\n\n"
-                "🇹🇯 Акнун адреси гирифтани бор дар Тоҷикистонро илова кунед.\n"
-                "Фото + caption, видео + caption ё матни одӣ фиристед."
-            ),
-        )
-        await callback.answer()
-        return
-
-    has_tj_pickup = bool(
-        (getattr(warehouse, "tj_pickup_caption", None) or "").strip()
-        or (getattr(warehouse, "tj_pickup_media_file_id", None) or "").strip()
-    )
-
-    if not has_tj_pickup:
-        await state.update_data(
-            address_kind="tj_pickup",
-            city_key=warehouse.city_key,
-            media_type="text",
-            media_file_id=None,
-            address_caption="",
-        )
-        await state.set_state(AdminWarehouseStates.waiting_for_photo_caption)
-
-        await _finish_preview(
-            callback,
-            (
-                "✅ Адреси склади Чин сабт шуд.\n"
-                f"Филиал: {warehouse.city_name_tj}\n\n"
-                "🇹🇯 Акнун адреси гирифтани бор дар Тоҷикистонро илова кунед.\n"
-                "Фото + caption, видео + caption ё матни одӣ фиристед."
-            ),
-        )
+        await _prompt_tj_pickup_after_china_address(callback, state, warehouse)
         await callback.answer()
         return
 

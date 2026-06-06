@@ -1,6 +1,6 @@
 from datetime import date, datetime, timezone
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
 
 from database.db import async_session
@@ -47,6 +47,17 @@ async def get_parcel_with_user(parcel_id: int) -> Parcel | None:
         return result.scalar_one_or_none()
 
 
+async def get_parcel_for_user(parcel_id: int, user_id: int) -> Parcel | None:
+    async with async_session() as session:
+        result = await session.execute(
+            select(Parcel).where(
+                Parcel.id == parcel_id,
+                Parcel.user_id == user_id,
+            ),
+        )
+        return result.scalar_one_or_none()
+
+
 async def get_parcels_by_client_code(client_code: str) -> list[Parcel]:
     async with async_session() as session:
         result = await session.execute(
@@ -55,6 +66,43 @@ async def get_parcels_by_client_code(client_code: str) -> list[Parcel]:
             .order_by(Parcel.received_china_at.desc(), Parcel.id.desc()),
         )
         return list(result.scalars().all())
+
+
+async def get_parcels_with_user_by_client_code(client_code: str) -> list[Parcel]:
+    async with async_session() as session:
+        result = await session.execute(
+            select(Parcel)
+            .options(selectinload(Parcel.user))
+            .where(Parcel.client_code == client_code)
+            .order_by(Parcel.received_china_at.desc(), Parcel.id.desc()),
+        )
+        return list(result.scalars().all())
+
+
+async def list_parcels_by_status(
+    *,
+    status_code: str,
+    limit: int,
+    offset: int = 0,
+) -> list[Parcel]:
+    async with async_session() as session:
+        result = await session.execute(
+            select(Parcel)
+            .options(selectinload(Parcel.user))
+            .where(Parcel.status_code == status_code)
+            .order_by(Parcel.created_at.desc(), Parcel.id.desc())
+            .offset(offset)
+            .limit(limit),
+        )
+        return list(result.scalars().all())
+
+
+async def count_parcels_by_status(status_code: str) -> int:
+    async with async_session() as session:
+        result = await session.execute(
+            select(func.count(Parcel.id)).where(Parcel.status_code == status_code),
+        )
+        return int(result.scalar_one())
 
 
 async def create_parcel(
