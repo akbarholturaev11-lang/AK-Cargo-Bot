@@ -131,7 +131,7 @@ def _status_lists_keyboard():
             (("🚚 Дар роҳ", f"admin_status:page:{STATUS_ON_THE_WAY}:0"),),
             (("🏬 Расидаҳо", f"admin_status:page:{STATUS_ARRIVED_DESTINATION}:0"),),
             (("✅ Супорида шуд", f"admin_status:page:{STATUS_RECEIVED}:0"),),
-            (("🔍 Search", "admin_search:again"),),
+            (("🔍 Ҷустуҷӯ", "admin_search:again"),),
         ),
     )
 
@@ -156,8 +156,8 @@ def _status_page_keyboard(parcels, status_code: str, page: int, total: int):
     if nav:
         rows.append(tuple(nav))
 
-    rows.append((("📦 Status lists", "admin_status:lists"),))
-    rows.append((("🔍 Search", "admin_search:again"),))
+    rows.append((("📦 Рӯйхати статусҳо", "admin_status:lists"),))
+    rows.append((("🔍 Ҷустуҷӯ", "admin_search:again"),))
     return build_inline_keyboard(tuple(rows))
 
 
@@ -174,8 +174,8 @@ def _search_results_keyboard(parcels):
     return build_inline_keyboard(
         rows
         + (
-            (("🔍 Search again", "admin_search:again"),),
-            (("📦 Status lists", "admin_status:lists"),),
+            (("🔍 Боз ҷустуҷӯ", "admin_search:again"),),
+            (("📦 Рӯйхати статусҳо", "admin_status:lists"),),
         ),
     )
 
@@ -212,7 +212,7 @@ async def _admin_search(query: str) -> tuple[str, object | None]:
         )
         if not parcels:
             return text + "\n\nБарои ин мизоҷ бор сабт нашудааст.", build_inline_keyboard(
-                ((("🔍 Search again", "admin_search:again"),),),
+                ((("🔍 Боз ҷустуҷӯ", "admin_search:again"),),),
             )
         return text, _search_results_keyboard(parcels)
 
@@ -221,7 +221,7 @@ async def _admin_search(query: str) -> tuple[str, object | None]:
         return f"Борҳо бо коди {value.upper()}: {len(parcels)}", _search_results_keyboard(parcels)
 
     return "Ҳеҷ чиз ёфт нашуд.", build_inline_keyboard(
-        ((("🔍 Search again", "admin_search:again"),),),
+        ((("🔍 Боз ҷустуҷӯ", "admin_search:again"),),),
     )
 
 
@@ -420,7 +420,7 @@ async def show_admin_status_lists(callback: CallbackQuery) -> None:
 
     if callback.message is not None:
         await callback.message.edit_text(
-            "Status lists",
+            "📦 Рӯйхати статусҳо",
             reply_markup=_status_lists_keyboard(),
         )
     await callback.answer()

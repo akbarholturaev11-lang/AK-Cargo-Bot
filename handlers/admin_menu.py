@@ -21,4 +21,4 @@ async def admin_command(message: Message) -> None:
         return
 
     await message.answer(ADMIN_PANEL, reply_markup=admin_main_menu())
-    await message.answer("Quick panel", reply_markup=admin_quick_panel_keyboard())
+    await message.answer("⚡ Панели зуд", reply_markup=admin_quick_panel_keyboard())
